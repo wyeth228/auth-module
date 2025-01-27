@@ -1,0 +1,45 @@
+.authorization,
+.authentication {
+  text-align: center;
+}
+
+.authorization__header,
+.authentication__header {
+  text-transform: capitalize;
+
+  padding-top: 180px;
+}
+
+.authorization__form input,
+.authentication__form input {
+  min-width: 220px;
+
+  padding: 8px;
+}
+
+.authorization__form button,
+.authentication__form button {
+  padding: 8px;
+}
+
+.auth-messenger {
+  padding: 16px;
+
+  font-size: 12px;
+}
+
+.auth-messenger_hidden {
+  display: none;
+}
+
+.auth-messenger_error-type {
+  background-color: #ffcccc;
+}
+
+.auth-messenger_information-type {
+  background-color: #ccdeff;
+}
+
+.auth-messenger_success-type {
+  background-color: #bdffbd;
+}

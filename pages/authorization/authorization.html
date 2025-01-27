@@ -1,0 +1,52 @@
+<main class="authorization">
+  <h2 class="authorization__header" data-localizator-id="authorization__header">
+    authorization
+  </h2>
+
+  <= component("authMessenger") =>
+
+  <form class="authorization__form" id="authorization__form">
+    <p>
+      <input
+        type="text"
+        placeholder="username"
+        data-localizator-id="authorization__username"
+        id="authorization__username"
+      />
+    </p>
+    <p>
+      <input
+        type="password"
+        placeholder="password"
+        data-localizator-id="authorization__password"
+        id="authorization__password"
+      />
+    </p>
+    <p>
+      <input
+        type="password"
+        placeholder="repeat the password"
+        data-localizator-id="authorization__repeated-password"
+        id="authorization__repeated-password"
+      />
+    </p>
+
+    <button
+      type="submit"
+      data-localizator-id="authorization__button"
+      id="authorization__button"
+    >
+      authorize
+    </button>
+  </form>
+
+  <p>
+    <a
+      href="/authentication"
+      data-navigo
+      data-localizator-id="authorization__authentification-link"
+    >
+      authenticate
+    </a>
+  </p>
+</main>
