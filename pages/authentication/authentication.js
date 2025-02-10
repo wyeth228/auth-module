@@ -1,8 +1,14 @@
-define(["configs/app", "configs/authentication", "utils"], function (
-  appConfig,
-  config,
-  utils
-) {
+define(["configs/app", "utils/requests"], function (appConfig, utils) {
+  var config = {
+    FORM_ID: "authentication__form",
+    USERNAME_ID: "authentication__username",
+    PASSWORD_ID: "authentication__password",
+    BUTTON_ID: "authentication__button",
+
+    SUCCESS_REDIRECT_URI: "/",
+    SUCCESS_REDIRECT_DELAY: 1000,
+  };
+
   var eventBus = undefined;
 
   function displayMessageWithTranslation(errorName, messageType) {

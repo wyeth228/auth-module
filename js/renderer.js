@@ -1,4 +1,22 @@
-define(["utils", "configs/renderer"], function (utils, config) {
+/**
+ * v0.1.2
+ */
+
+define(["utils/requests", "utils/string"], function (
+  utilsRequests,
+  utilsString
+) {
+  var config = {
+    MAIN_PAGE_NAME: "main",
+
+    PAGES_DIRECTORY: "./pages",
+    COMPONENTS_DIRECTORY: "./components",
+
+    COMPONENTS_REGEXP: /<= component\(["].*?["]\) =>/gm,
+    COMPONENT_NAME_REGEXP: /["'].*?["']/gm,
+    QUOTATION_MARKS_REGEXP: /["']/gm,
+  };
+
   var appRoot = undefined;
 
   var router = undefined;
@@ -27,53 +45,70 @@ define(["utils", "configs/renderer"], function (utils, config) {
     });
   }
 
-  function isPageContainsComponents(pageContent) {
+  function isContainsComponents(pageContent) {
     /**
      * search in html content substrings like <= component("componentName") =>
      */
     var components = pageContent.match(config.COMPONENTS_REGEXP);
 
-    if (components.length) {
+    if (components) {
       return true;
     }
 
     return false;
   }
 
-  function getAllComponentsData(pageContent) {
-    /**
-     * search in html contents substrings like <= component("componentName") =>
-     */
-    var componentMatches = pageContent.match(config.COMPONENTS_REGEXP);
+  function insertComponentHTMLToContent(
+    componentContent,
+    componentReplaceName,
+    pageContent
+  ) {
+    pageContent = utilsString.unescapeHTML(pageContent);
 
-    /**
-     * result object which we will return
-     */
-    var resultComponentData = [];
+    while (pageContent.indexOf(componentReplaceName) > 0) {
+      pageContent = pageContent.replace(componentReplaceName, componentContent);
+    }
 
-    for (var componentMatch of componentMatches) {
+    return pageContent;
+  }
+
+  function onComponentHTMLLoad(
+    componentName,
+    componentReplaceName,
+    componentContent
+  ) {
+    appRoot.innerHTML = insertComponentHTMLToContent(
+      componentContent,
+      componentReplaceName,
+      appRoot.innerHTML
+    );
+
+    router.updatePageLinks();
+
+    loadAndInitJSModule("component", componentName);
+
+    if (isContainsComponents(componentContent)) {
+      generateComponentsTree(componentContent);
+    }
+  }
+
+  /**
+   * @param {Array} parent
+   * @param {string} htmlContent
+   * @returns undefined
+   */
+  function generateComponentsTree(htmlContent) {
+    var componentMatches = htmlContent.match(config.COMPONENTS_REGEXP);
+
+    for (var i = 0; i < componentMatches.length; ++i) {
+      var componentMatch = componentMatches[i];
+
       /**
        * extract from string <= component("componentName") => the "componentName" substring
        */
       var componentName = componentMatch.match(config.COMPONENT_NAME_REGEXP);
 
       if (!componentName) {
-        return;
-      }
-
-      var alreadyExists = utils.searchIn(
-        resultComponentData,
-        function (componentData) {
-          if (componentData.componentName === componentName) {
-            return true;
-          }
-        }
-      );
-
-      /**
-       * if component already exists in the list we will
-       */
-      if (alreadyExists) {
         return;
       }
 
@@ -85,88 +120,22 @@ define(["utils", "configs/renderer"], function (utils, config) {
         ""
       );
 
-      resultComponentData.push({
-        componentName: componentName,
-        componentReplaceName: componentMatch,
-      });
-    }
-
-    return resultComponentData;
-  }
-
-  function insertComponentHTMLToContent(
-    componentContent,
-    componentReplaceName,
-    pageContent
-  ) {
-    while (pageContent.indexOf(componentReplaceName) > 0) {
-      pageContent = pageContent.replace(componentReplaceName, componentContent);
-    }
-
-    return pageContent;
-  }
-
-  /**
-   * init component, load html and init its js after
-   * @param {string} componentName
-   * @param {string} componentReplaceName
-   * @param {string} pageContent
-   * @param {Function} onComponentLoad
-   */
-  function initComponent(
-    componentName,
-    componentReplaceName,
-    pageContent,
-    onComponentLoad
-  ) {
-    utils.loadFile(
-      getPathToComponent(componentName),
-      function (componentContent) {
-        /**
-         * get page content with inserted component
-         */
-        var changedPageContent = insertComponentHTMLToContent(
-          componentContent,
-          componentReplaceName,
-          pageContent
-        );
-
-        /**
-         * load component js and init, after all, we will call component load callback and pass to it html page with inserted component
-         */
-        loadAndInitJSModule("component", componentName, function () {
-          onComponentLoad(changedPageContent);
-        });
-      }
-    );
-  }
-
-  function initializeAllComponents(pageName, pageContent) {
-    var componentsData = getAllComponentsData(pageContent);
-
-    var initalizedComponents = 0;
-
-    for (var componentData of componentsData) {
       /**
-       * init component (load html and insert to page, and init js)
+       * load component html
        */
-      initComponent(
-        componentData.componentName,
-        componentData.componentReplaceName,
-        pageContent,
-        function (changedPageContent) {
-          initalizedComponents++;
-
-          if (initalizedComponents === Object.keys(componentsData).length) {
-            onAllComponentsInitialized(pageName, changedPageContent);
+      (function (cName, cMatch) {
+        utilsRequests.loadFile(
+          getPathToComponent(cName),
+          function (componentContent) {
+            onComponentHTMLLoad(cName, cMatch, componentContent);
           }
-        }
-      );
+        );
+      })(componentName, componentMatch);
     }
   }
 
-  function onAllComponentsInitialized(pageName, pageContent) {
-    insertHTMLToAppRoot(pageName, pageContent);
+  function initializeAllComponents(pageContent) {
+    generateComponentsTree(pageContent);
   }
 
   function insertHTMLToAppRoot(pageName, pageContent) {
@@ -203,16 +172,16 @@ define(["utils", "configs/renderer"], function (utils, config) {
   }
 
   function loadPage(pageName) {
-    utils.loadFile(getPathToPage(pageName), function (pageContent) {
+    utilsRequests.loadFile(getPathToPage(pageName), function (pageContent) {
       renderPage(pageName, pageContent);
     });
   }
 
   function renderPage(pageName, pageContent) {
-    if (isPageContainsComponents(pageContent)) {
-      initializeAllComponents(pageName, pageContent);
-    } else {
-      insertHTMLToAppRoot(pageName, pageContent);
+    insertHTMLToAppRoot(pageName, pageContent);
+
+    if (isContainsComponents(pageContent)) {
+      initializeAllComponents(pageContent);
     }
   }
 
@@ -232,9 +201,15 @@ define(["utils", "configs/renderer"], function (utils, config) {
 
       router = new Navigo();
 
-      for (var route of routes) {
+      for (var i = 0; i < routes.length; ++i) {
+        var route = routes[i];
+
         router.on(route, function (route) {
-          loadPage(route.url);
+          if (route.url === "/" || route.url === "") {
+            loadPage(config.MAIN_PAGE_NAME);
+          } else {
+            loadPage(route.url);
+          }
         });
       }
 

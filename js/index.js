@@ -1,3 +1,5 @@
+window.APP_VERSION = "0.1.1";
+
 /**
  * route change -> page render -> localize content (e.g. in "after" hook of router)
  */
@@ -13,9 +15,15 @@ var main = function (renderer, localizator, eventBus) {
   });
 
   eventBus.onEventHappens("getTranslationText", function (data, callback) {
-    callback(
-      localizator.getDynamicTranslationText(data.pageName, data.translationName)
-    );
+    var localizations = localizator.getLocalizations();
+
+    if ("authorization_messages" in localizations) {
+      callback(
+        localizations.authorization_messages[data.translationName][
+          localizator.getLanguage()
+        ]
+      );
+    }
   });
 };
 
@@ -24,12 +32,13 @@ var main = function (renderer, localizator, eventBus) {
  */
 requirejs.config({
   urlArgs: function (id, url) {
-    var args = "v=1";
-    // if (url.indexOf("view.html") !== -1) {
-    //   args = "v=2";
-    // }
+    var args = "v=" + window.APP_VERSION;
 
-    return (url.indexOf("?") === -1 ? "?" : "&") + args;
+    if (url.indexOf("?") === -1) {
+      return "?" + args;
+    } else {
+      return "&" + args;
+    }
   },
 });
 

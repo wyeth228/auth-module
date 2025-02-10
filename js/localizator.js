@@ -1,4 +1,20 @@
-define(["utils", "configs/localizator"], function (utils, config) {
+/**
+ * v0.1.1
+ */
+
+define(["utils/requests", "utils/cycle"], function (utilsRequests, utilsCycle) {
+  var config = {
+    LANGUAGES: {
+      RU: "ru",
+      EN: "en",
+    },
+
+    LOCALIZATIONS_PATH: "./json/localizations.json",
+
+    INNER_HTML: "innerHTML",
+    PLACEHOLDER: "placeholder",
+  };
+
   var localizations = undefined;
 
   var language = undefined;
@@ -16,7 +32,11 @@ define(["utils", "configs/localizator"], function (utils, config) {
       return;
     }
 
-    for (var dataId of Object.keys(localizations[pageName].static)) {
+    var pageNames = Object.keys(localizations[pageName]);
+
+    for (var i = 0; i < pageNames.length; ++i) {
+      var dataId = pageNames[i];
+
       var element = document.querySelector(
         '[data-localizator-id="' + dataId + '"]'
       );
@@ -25,7 +45,7 @@ define(["utils", "configs/localizator"], function (utils, config) {
         return;
       }
 
-      var elementTranslationData = localizations[pageName].static[dataId];
+      var elementTranslationData = localizations[pageName][dataId];
 
       if (!(language in elementTranslationData)) {
         return;
@@ -65,34 +85,28 @@ define(["utils", "configs/localizator"], function (utils, config) {
       if (isAllLocalizationsDownloaded()) {
         localizePage(pageName);
       } else {
-        var waiterId = utils.startWaiter(function () {
+        var waiterId = utilsCycle.startWaiter(function () {
           if (isAllLocalizationsDownloaded()) {
             localizePage(pageName);
 
-            utils.endWaiter(waiterId);
+            utilsCycle.endWaiter(waiterId);
           }
         });
       }
     },
 
-    getDynamicTranslationText: function (pageName, translationName) {
-      if (!(pageName in localizations)) {
-        return "";
-      }
+    getLanguage: function () {
+      return language;
+    },
 
-      var translations = localizations[pageName].dynamic[translationName];
-
-      if (!(language in translations)) {
-        return "";
-      }
-
-      return translations[language];
+    getLocalizations: function () {
+      return localizations;
     },
 
     init: function () {
       determineLanguage();
 
-      utils.loadJSON(config.LOCALIZATIONS_PATH, function (result) {
+      utilsRequests.loadJSON(config.LOCALIZATIONS_PATH, function (result) {
         localizations = result;
       });
     },
