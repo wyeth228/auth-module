@@ -1,8 +1,5 @@
-window.APP_VERSION = "0.1.1";
+window.APP_VERSION = "0.1.2";
 
-/**
- * route change -> page render -> localize content (e.g. in "after" hook of router)
- */
 var main = function (renderer, localizator, eventBus) {
   localizator.init();
 
@@ -27,10 +24,8 @@ var main = function (renderer, localizator, eventBus) {
   });
 };
 
-/**
- * test
- */
 requirejs.config({
+  waitSeconds: 200,
   urlArgs: function (id, url) {
     var args = "v=" + window.APP_VERSION;
 
