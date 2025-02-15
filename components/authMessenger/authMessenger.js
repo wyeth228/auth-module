@@ -10,7 +10,7 @@ define(function () {
   var eventBus = undefined;
 
   function cleanMessengerPreviousTypes(messengerElement) {
-    var classListValues = messengerElement.classList.values();
+    var classListValues = messengerElement.classList;
 
     for (var i = 0; i < classListValues.length; ++i) {
       var className = classListValues[i];
