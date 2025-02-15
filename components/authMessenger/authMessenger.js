@@ -10,7 +10,11 @@ define(function () {
   var eventBus = undefined;
 
   function cleanMessengerPreviousTypes(messengerElement) {
-    for (var className of messengerElement.classList.values()) {
+    var classListValues = messengerElement.classList.values();
+
+    for (var i = 0; i < classListValues.length; ++i) {
+      var className = classListValues[i];
+
       if (className.includes("type")) {
         messengerElement.classList.remove(className);
       }
