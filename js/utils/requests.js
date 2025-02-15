@@ -10,7 +10,31 @@ define(["utils/extra"], function (utilsExtra) {
 
   var callbackStore = {};
 
-  function addVersion(src) {
+  function deletePreviousVersionsFromLocalStorage(src, versionedSrc) {
+    for (var i = 0; i < localStorage.length; ++i) {
+      (function (index) {
+        var keyFromLocalStorage = localStorage.key(index);
+
+        if (keyFromLocalStorage === versionedSrc) {
+          return;
+        }
+
+        if (keyFromLocalStorage.indexOf(src) === -1) {
+          return;
+        }
+
+        /**
+         * setTimeout is used for because removing items from localStorage will change its length that this cycle depends of.
+         * removing from localStorage will be happpend after the iteration is accomplished
+         */
+        setTimeout(function () {
+          localStorage.removeItem(keyFromLocalStorage);
+        });
+      })(i);
+    }
+  }
+
+  function addVersionTo(src) {
     if (window.APP_VERSION) {
       var args = "v=" + window.APP_VERSION;
 
@@ -24,7 +48,7 @@ define(["utils/extra"], function (utilsExtra) {
 
   return {
     loadFile: function (src, callback) {
-      src = addVersion(src);
+      src = addVersionTo(src);
 
       /**
        * if we have already downloaded such file we will pass the file
@@ -44,7 +68,7 @@ define(["utils/extra"], function (utilsExtra) {
         callbackStore[src].callbacks.push(callback);
       } else {
         callbackStore[src] = {
-          type: "loadFile",
+          type: config.CALLBACK_TYPES.LOAD_FILE,
           callbacks: [callback],
         };
       }
@@ -69,26 +93,32 @@ define(["utils/extra"], function (utilsExtra) {
 
         var callbackSendData = utilsExtra.copy(xhr.responseText);
 
-        if (src in callbackStore) {
-          if (callbackStore[src].type === config.CALLBACK_TYPES.LOAD_FILE) {
-            for (var i = 0; i < callbackStore[src].callbacks.length; ++i) {
-              var cb = callbackStore[src].callbacks[i];
-
-              cb(callbackSendData);
-            }
-
-            delete callbackStore[src];
-          }
+        if (!(src in callbackStore)) {
+          return;
         }
+
+        if (callbackStore[src].type !== config.CALLBACK_TYPES.LOAD_FILE) {
+          return;
+        }
+
+        for (var i = 0; i < callbackStore[src].callbacks.length; ++i) {
+          var cb = callbackStore[src].callbacks[i];
+
+          cb(callbackSendData);
+        }
+
+        delete callbackStore[src];
       };
 
       xhr.send(null);
     },
 
     loadJSON: function (src, callback) {
-      src = addVersion(src);
+      var versionedSrc = addVersionTo(src);
 
-      var stored = localStorage.getItem(src);
+      deletePreviousVersionsFromLocalStorage(src, versionedSrc);
+
+      var stored = localStorage.getItem(versionedSrc);
 
       if (stored) {
         callback(JSON.parse(stored));
@@ -98,9 +128,9 @@ define(["utils/extra"], function (utilsExtra) {
 
       var xhr = new XMLHttpRequest();
       xhr.overrideMimeType("application/json");
-      xhr.open("GET", src, true);
+      xhr.open("GET", versionedSrc, true);
       xhr.onload = function () {
-        localStorage.setItem(src, xhr.responseText);
+        localStorage.setItem(versionedSrc, xhr.responseText);
 
         callback(JSON.parse(xhr.responseText));
       };
@@ -109,7 +139,7 @@ define(["utils/extra"], function (utilsExtra) {
     },
 
     loadImage: function (src, callback) {
-      src = addVersion(src);
+      src = addVersionTo(src);
 
       /**
        * if we have already downloaded such file we will pass the file
@@ -129,7 +159,7 @@ define(["utils/extra"], function (utilsExtra) {
         callbackStore[src].callbacks.push(callback);
       } else {
         callbackStore[src] = {
-          type: "loadImage",
+          type: config.CALLBACK_TYPES.LOAD_IMAGE,
           callbacks: [callback],
         };
       }
@@ -146,31 +176,27 @@ define(["utils/extra"], function (utilsExtra) {
         fileStore[src] = null;
       }
 
-      var xhr = new XMLHttpRequest();
-      xhr.responseType = "arraybuffer";
-      xhr.overrideMimeType("image/*");
-      xhr.open("GET", src, true);
-      xhr.onload = function () {
-        var blob = new Blob([xhr.response]);
+      var image = new Image();
+      image.src = src;
+      image.onload = function () {
+        fileStore[src] = src;
 
-        var callbackSendData = URL.createObjectURL(blob);
-
-        fileStore[src] = callbackSendData;
-
-        if (src in callbackStore) {
-          if (callbackStore[src].type === config.CALLBACK_TYPES.LOAD_IMAGE) {
-            for (var i = 0; i < callbackStore[src].callbacks.length; ++i) {
-              var cb = callbackStore[src].callbacks[i];
-
-              cb(callbackSendData);
-            }
-
-            delete callbackStore[src];
-          }
+        if (!(src in callbackStore)) {
+          return;
         }
-      };
 
-      xhr.send(null);
+        if (callbackStore[src].type !== config.CALLBACK_TYPES.LOAD_IMAGE) {
+          return;
+        }
+
+        for (var i = 0; i < callbackStore[src].callbacks.length; ++i) {
+          var cb = callbackStore[src].callbacks[i];
+
+          cb(src);
+        }
+
+        delete callbackStore[src];
+      };
     },
 
     doRequest: function (url, settings, successCallback, errorCallback) {

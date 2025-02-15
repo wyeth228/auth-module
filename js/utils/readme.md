@@ -1,3 +1,3 @@
-v0.1
+v0.1.2
 
-not compatible with IE 6-9 because of using Blob object, and URL static method createObjectURL, and FileReader
+not compatible with IE 6-9 because of using FileReader
