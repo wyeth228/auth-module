@@ -32,33 +32,31 @@
     }
   },
   "authentication": {
-    "static": {
-      "authentication__header": {
-        "type": "innerHTML",
-        "ru": "войти",
-        "en": "authentication"
-      },
-      "authentication__username": {
-        "type": "placeholder",
-        "ru": "имя",
-        "en": "username"
-      },
+    "authentication__header": {
+      "type": "innerHTML",
+      "ru": "войти",
+      "en": "authentication"
+    },
+    "authentication__username": {
+      "type": "placeholder",
+      "ru": "имя",
+      "en": "username"
+    },
 
-      "authentication__password": {
-        "type": "placeholder",
-        "ru": "пароль",
-        "en": "password"
-      },
-      "authentication__button": {
-        "type": "innerHTML",
-        "ru": "войти",
-        "en": "authenticate"
-      },
-      "authentication__authorization-link": {
-        "type": "innerHTML",
-        "ru": "регистрация",
-        "en": "authorization"
-      }
+    "authentication__password": {
+      "type": "placeholder",
+      "ru": "пароль",
+      "en": "password"
+    },
+    "authentication__button": {
+      "type": "innerHTML",
+      "ru": "войти",
+      "en": "authenticate"
+    },
+    "authentication__authorization-link": {
+      "type": "innerHTML",
+      "ru": "регистрация",
+      "en": "authorization"
     }
   },
   "authorization_messages": {
