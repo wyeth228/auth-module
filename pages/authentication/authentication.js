@@ -68,15 +68,18 @@ define(["configs/app", "utils/requests"], function (appConfig, utils) {
 
   function sendAuthenticationRequest(username, password) {
     try {
-      utils.doRequest(
-        appConfig.API_ADDRESS + appConfig.API_AUTHENTICATION_PATH,
-        {
-          method: "POST",
-          body: "username=" + username + "&password=" + password,
-        },
-        onRequestSuccess,
-        onRequestError
-      );
+      eventBus.sendEvent("getLanguage", function (language) {
+        utils.doRequest(
+          appConfig.API_ADDRESS + appConfig.API_AUTHENTICATION_PATH,
+          {
+            method: "POST",
+            body: "username=" + username + "&password=" + password,
+          },
+          onRequestSuccess,
+          onRequestError,
+          language
+        );
+      });
     } catch (error) {
       console.error(error);
 

@@ -199,7 +199,13 @@ define(["utils/extra"], function (utilsExtra) {
       };
     },
 
-    doRequest: function (url, settings, successCallback, errorCallback) {
+    doRequest: function (
+      url,
+      settings,
+      successCallback,
+      errorCallback,
+      language
+    ) {
       if (!settings) {
         return;
       }
@@ -210,6 +216,7 @@ define(["utils/extra"], function (utilsExtra) {
 
       var xhr = new XMLHttpRequest();
       xhr.open(settings.method, url, true);
+      xhr.setRequestHeader("Accept-Language", language);
       xhr.onload = function () {
         successCallback(xhr.status, xhr.response);
       };
